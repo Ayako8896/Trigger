@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Relay Control</title>
+  <style>
+    body {
+      background-color: black;
+      color: #aaddff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+    button {
+      background-color: #222;
+      color: #aaddff;
+      border: 2px solid #aaddff;
+      border-radius: 10px;
+      padding: 15px 40px;
+      margin: 20px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #444;
+    }
+    .status {
+      margin-top: 40px;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Relay Control</h1>
+  <button onclick="updateRelay(1)">Turn ON</button>
+  <button onclick="updateRelay(0)">Turn OFF</button>
+  <div class="status" id="statusText">Status: Loading...</div>
+
+  <script>
+    const channelID = '2940658';
+    const readAPIKey = 'EVNUN56SDNPFSB3I';
+    const writeAPIKey = 'Y9UZSEKQI52AY8TO';
+
+    function fetchStatus() {
+      fetch(`https://api.thingspeak.com/channels/${channelID}/fields/1/last.json?api_key=${readAPIKey}`)
+        .then(response => response.json())
+        .then(data => {
+          const value = data.field1;
+          const status = (value === "1") ? "Relay is ON" : "Relay is OFF";
+          document.getElementById("statusText").innerText = "Status: " + status;
+        })
+        .catch(error => {
+          document.getElementById("statusText").innerText = "Error loading status.";
+          console.error(error);
+        });
+    }
+
+    function updateRelay(value) {
+      const url = `https://api.thingspeak.com/update?api_key=${writeAPIKey}&field1=${value}`;
+      fetch(url)
+        .then(() => {
+          setTimeout(fetchStatus, 2000); // Slight delay for ThingSpeak to update
+        });
+    }
+
+    fetchStatus(); // Fetch status on page load
+  </script>
+</body>
+</html>
